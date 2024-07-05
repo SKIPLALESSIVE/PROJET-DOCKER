@@ -1,0 +1,47 @@
+version: '3.8'
+
+services:
+  backend:
+    image: skiplalessive/back-image:latest
+    ports:
+      - "3000:3000"
+    depends_on:
+      - database
+    networks:
+      backend_network:
+        ipv4_address: 172.19.0.2  # Adresse IP du backend
+
+  frontend:
+    image: skiplalessive/front-image:latest
+    ports:
+      - "8080:80"
+    networks:
+      backend_network:
+        ipv4_address: 172.19.0.4  # Adresse IP du frontend
+
+  database:
+    image: mariadb:latest
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: "azerty"
+      MYSQL_DATABASE: "paristakecare"
+      MYSQL_USER: root
+      MYSQL_PASSWORD: "azerty"
+    volumes:
+      - db_data:/var/lib/mysql
+      - ./database:/docker-entrypoint-initdb.d  # Montage du répertoire contenant le fichier SQL
+    networks:
+      backend_network:
+        ipv4_address: 172.19.0.3  # Adresse IP de la base de données
+    command: ["--init-file", "/docker-entrypoint-initdb.d/paristakecare.sql"]
+
+volumes:
+  db_data:
+
+networks:
+  backend_network:
+    driver: bridge
+    ipam:
+      driver: default
+      config:
+        - subnet: 172.19.0.0/16
